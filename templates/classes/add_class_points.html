@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-container">
+    <h2>🎯 Начислить баллы классу</h2>
+    <div class="class-info">
+        <h3>Класс: {{ school_class.grade }}{{ school_class.name }}</h3>
+        <p>Текущий рейтинг: <strong>{{ school_class.total_rating }} баллов</strong></p>
+    </div>
+    
+    <form method="POST" class="auth-form">
+        <div class="form-group">
+            <label for="points">Количество баллов:</label>
+            <input type="number" id="points" name="points" min="1" max="100" required>
+            <small>Введите количество баллов для начисления классу</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="reason">Причина начисления:</label>
+            <textarea id="reason" name="reason" rows="4" required 
+                     placeholder="Опишите причину начисления баллов (например: 'Активное участие в субботнике', 'Победа в конкурсе' и т.д.)"></textarea>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-success">🎯 Начислить баллы</button>
+            <a href="{{ url_for('class_students', class_id=school_class.id) }}" class="btn btn-secondary">← Назад</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

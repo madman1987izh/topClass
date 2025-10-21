@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="events-page">
+    <h2>Мероприятия</h2>
+    
+    <div class="actions">
+        <a href="{{ url_for('add_event') }}" class="btn">Добавить мероприятие</a>
+    </div>
+
+    <div class="events-list">
+        <h3>Список мероприятий</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Уровень</th>
+                    <th>Тип</th>
+                    <th>Баллы</th>
+                    <th>Дата создания</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in events %}
+                <tr>
+                    <td>{{ event.name }}</td>
+                    <td>
+                        {% if event.level == 'school' %}Школьный
+                        {% elif event.level == 'city' %}Городской
+                        {% elif event.level == 'republic' %}Республиканский
+                        {% elif event.level == 'russian' %}Российский
+                        {% else %}{{ event.level }}{% endif %}
+                    </td>
+                    <td>
+                        {% if event.event_type == 'class' %}Рейтинг класса
+                        {% elif event.event_type == 'student' %}Личный рейтинг
+                        {% else %}{{ event.event_type }}{% endif %}
+                    </td>
+                    <td>{{ event.points }}</td>
+                    <td>{{ event.created_at.strftime('%d.%m.%Y') }}</td>
+                    <td>
+                        <a href="{{ url_for('add_participation', event_id=event.id) }}" class="btn-small">
+                            Зарегистрировать участие
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

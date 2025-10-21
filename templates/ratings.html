@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="ratings-page">
+    <h2>Рейтинги</h2>
+    
+    <div class="ratings-section">
+        <h3>Рейтинг классов</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Место</th>
+                    <th>Класс</th>
+                    <th>Классный руководитель</th>
+                    <th>Рейтинг</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for class in class_ratings %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ class.grade }} - {{ class.name }}</td>
+                    <td>
+                        {% if class.class_teacher %}
+                            {{ class.class_teacher.username }}
+                        {% else %}
+                            Не назначен
+                        {% endif %}
+                    </td>
+                    <td>{{ class.total_rating }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="ratings-section">
+        <h3>Личный рейтинг учащихся</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Место</th>
+                    <th>Ученик</th>
+                    <th>Класс</th>
+                    <th>Рейтинг</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in student_ratings %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ student.full_name }}</td>
+                    <td>{{ student.school_class.grade }}{{ student.school_class.name }}</td>
+                    <td>{{ student.personal_rating }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

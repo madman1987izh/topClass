@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard">
+    <h2>🎉 Добро пожаловать, {{ current_user.username if current_user.role else current_user.full_name }}!</h2>
+
+    {% if current_user.role %}
+    <div class="stats">
+        <div class="card stat-card">
+            <h3>🏆 Общий рейтинг школы</h3>
+            <p class="stat-number">{{ total_school_rating }}</p>
+            <p>баллов</p>
+        </div>
+        <div class="card stat-card">
+            <h3>👨‍🎓 Количество классов</h3>
+            <p class="stat-number">{{ classes_count }}</p>
+            <p>команд</p>
+        </div>
+        <div class="card stat-card">
+            <h3>🎯 Мероприятия</h3>
+            <p class="stat-number">{{ events_count }}</p>
+            <p>соревнований</p>
+        </div>
+        <div class="card stat-card">
+            <h3>🌟 Учащиеся</h3>
+            <p class="stat-number">{{ students_count }}</p>
+            <p>чемпионов</p>
+        </div>
+    </div>
+
+    <div class="card quick-actions">
+        <h3>⚡ Быстрые действия</h3>
+        <div class="action-buttons">
+            <a href="{{ url_for('classes') }}" class="btn">👨‍🏫 Управление классами</a>
+            <a href="{{ url_for('events') }}" class="btn">🎯 Создать мероприятие</a>
+            <a href="{{ url_for('ratings') }}" class="btn">📊 Посмотреть рейтинги</a>
+            <a href="{{ url_for('reports') }}" class="btn">📈 Сформировать отчет</a>
+        </div>
+    </div>
+    {% else %}
+    <div class="stats">
+        <div class="card stat-card">
+            <h3>🌟 Мой рейтинг</h3>
+            <p class="stat-number">{{ current_user.personal_rating }}</p>
+            <p>баллов</p>
+        </div>
+        <div class="card stat-card">
+            <h3>🎯 Участий</h3>
+            <p class="stat-number">{{ current_user.participations|selectattr("approved")|list|length }}</p>
+            <p>мероприятий</p>
+        </div>
+    </div>
+
+    <div class="card quick-actions">
+        <h3>🎯 Мои возможности</h3>
+        <div class="action-buttons">
+            <a href="{{ url_for('student_portfolio', student_id=current_user.id) }}" class="btn">📁 Мое портфолио</a>
+            <a href="{{ url_for('events') }}" class="btn">🏆 Участвовать в мероприятиях</a>
+            <a href="{{ url_for('ratings') }}" class="btn">🥇 Посмотреть рейтинги</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

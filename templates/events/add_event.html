@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-container">
+    <h2>🎯 Добавить мероприятие</h2>
+
+    <form method="POST" class="auth-form">
+        <div class="form-group">
+            <label for="name">Название мероприятия:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Описание мероприятия:</label>
+            <textarea id="description" name="description" rows="4"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="level">Уровень мероприятия:</label>
+            <select id="level" name="level" required>
+                <option value="school">🏫 Школьный</option>
+                <option value="city">🏙️ Городской</option>
+                <option value="republic">🏛️ Республиканский</option>
+                <option value="russian">🇷🇺 Российский</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="event_type">Тип рейтинга:</label>
+            <select id="event_type" name="event_type" required>
+                <option value="student">👤 Только личный</option>
+                <option value="class">👥 Только классный</option>
+                <option value="both">👤👥 Личный и классный</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="class_points">Баллы для класса (если применимо):</label>
+            <input type="number" id="class_points" name="class_points" min="0" value="0">
+            <small>Количество баллов, которые получат классы за участие в мероприятии</small>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn">🎯 Добавить мероприятие</button>
+            <a href="{{ url_for('events') }}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

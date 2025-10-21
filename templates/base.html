@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Школьный рейтинг{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <h1><a href="{{ url_for('index') }}">🏆 SchoolChamp</a></h1>
+            <ul>
+                {% if current_user.is_authenticated %}
+                    <li><a href="{{ url_for('dashboard') }}">🏠 Главная</a></li>
+                    {% if current_user.role %}
+                        <li><a href="{{ url_for('classes') }}">👨‍🏫 Классы</a></li>
+                        <li><a href="{{ url_for('events') }}">🎯 Мероприятия</a></li>
+                <li><a href="{{ url_for('paper_collection') }}">📦 Макулатура</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('ratings') }}">📊 Рейтинги</a></li>
+                    <li><a href="{{ url_for('reports') }}">📈 Отчеты</a></li>
+                    {% if not current_user.role %}
+                        <li><a href="{{ url_for('student_portfolio', student_id=current_user.id) }}">📁 Мое портфолио</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('logout') }}">🚪 Выйти ({{ current_user.username if current_user.role else current_user.full_name }})</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}">🔑 Войти</a></li>
+                    <li><a href="{{ url_for('register') }}">📝 Регистрация</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="flash-message">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

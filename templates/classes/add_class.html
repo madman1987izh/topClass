@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Добавить класс</h2>
+    
+    <form method="POST" class="auth-form">
+        <div class="form-group">
+            <label for="grade">Класс (цифра):</label>
+            <input type="text" id="grade" name="grade" required placeholder="Например: 5">
+        </div>
+        
+        <div class="form-group">
+            <label for="name">Буква класса:</label>
+            <input type="text" id="name" name="name" required placeholder="Например: А">
+        </div>
+        
+        <div class="form-group">
+            <label for="student_list">Список учеников (ФИО, каждое с новой строки):</label>
+            <textarea id="student_list" name="student_list" rows="10" 
+                     placeholder="Иванов Иван Иванович&#10;Петров Петр Петрович&#10;Сидорова Мария Сергеевна"></textarea>
+            <small>Система автоматически сгенерирует логины и пароли для каждого ученика</small>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn">Создать класс</button>
+            <a href="{{ url_for('classes') }}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

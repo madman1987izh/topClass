@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-form">
+    <h2>Добавить мероприятие</h2>
+    <form method="POST">
+        <div class="form-group">
+            <label for="name">Название мероприятия:</label>
+            <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+            <label for="level">Уровень мероприятия:</label>
+            <select id="level" name="level" required>
+                <option value="school">Школьный</option>
+                <option value="city">Городской</option>
+                <option value="republic">Республиканский</option>
+                <option value="russian">Российский</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="event_type">Тип рейтинга:</label>
+            <select id="event_type" name="event_type" required>
+                <option value="class">Рейтинг класса</option>
+                <option value="student">Личный рейтинг</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="points">Количество баллов:</label>
+            <input type="number" id="points" name="points" min="1" required>
+        </div>
+        <button type="submit" class="btn">Добавить мероприятие</button>
+        <a href="{{ url_for('events') }}" class="btn" style="background: #6c757d;">Отмена</a>
+    </form>
+</div>
+{% endblock %}

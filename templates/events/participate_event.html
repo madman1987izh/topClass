@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-container">
+    <h2>🎯 Участие в мероприятии</h2>
+    <div class="event-info card">
+        <h3>{{ event.name }}</h3>
+        <p><strong>Тип:</strong> {{ event.get_type_display() }}</p>
+        <p><strong>Баллы для класса:</strong>
+            {% if event.event_type in ['class', 'both'] %}
+                2 балла за участие класса (независимо от количества участников)
+            {% else %}
+                0 баллов
+            {% endif %}
+        </p>
+        <p><strong>Личные баллы:</strong>
+            {% if event.event_type in ['student', 'both'] %}
+                участие - 1 балл, 4 место - 2 балла, 3 место - 3 балла, 2 место - 4 балла, 1 место - 5 баллов
+            {% else %}
+                0 баллов
+            {% endif %}
+        </p>
+    </div>
+
+    <form method="POST" class="auth-form">
+        {% if current_user.role and current_user.role in ['admin', 'teacher'] %}
+
+        {% if current_user.role == 'admin' and not managed_class %}
+        <div class="form-group">
+            <label for="class_id">Выберите класс:</label>
+            <select id="class_id" name="class_id" required>
+                <option value="">-- Выберите класс --</option>
+                {% for class in classes %}
+                <option value="{{ class.id }}">{{ class.grade }}{{ class.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <div class="checkbox-group">
+                <input type="checkbox" id="all_students" name="all_students">
+                <label for="all_students">✅ Зарегистрировать всех учеников
+                    {% if managed_class %}
+                        {{ managed_class.grade }}{{ managed_class.name }}
+                    {% else %}
+                        выбранного
+                    {% endif %}
+                    класса
+                </label>
+            </div>
+            <small>При включении этой опции будут зарегистрированы все ученики класса. Вы сможете указать места для каждого ниже.</small>
+        </div>
+
+        <div class="form-group" id="students-selection">
+            <label for="student_ids">Выберите учеников:</label>
+            <select id="student_ids" name="student_ids" multiple style="height: 200px;">
+                {% for student in students %}
+                <option value="{{ student.id }}">
+                    {{ student.full_name }} ({{ student.school_class.grade }}{{ student.school_class.name }})
+                </option>
+                {% endfor %}
+            </select>
+            <small>Для выбора нескольких учеников удерживайте Ctrl (Cmd на Mac). Не требуется при включении опции "все ученики".</small>
+        </div>
+
+        {% if students %}
+        <div class="form-group">
+            <label>Места для учеников:</label>
+            <div class="places-grid">
+                {% for student in students %}
+                <div class="place-selection">
+                    <label for="place_{{ student.id }}">{{ student.full_name }}:</label>
+                    <select id="place_{{ student.id }}" name="place_{{ student.id }}">
+                        <option value="not_participated">❌ Не участвовал</option>
+                        <option value="" selected>🎯 Участие (1 балл)</option>
+                        <option value="4">4 место (2 балла)</option>
+                        <option value="3">🥉 3 место (3 балла)</option>
+                        <option value="2">🥈 2 место (4 балла)</option>
+                        <option value="1">🥇 1 место (5 баллов)</option>
+                    </select>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="participants_count">Общее количество участников от класса:</label>
+            <input type="number" id="participants_count" name="participants_count" value="{{ students|length if students else 1 }}" min="1" required>
+        </div>
+
+        {% else %}
+        <input type="hidden" name="student_ids" value="{{ current_user.id }}">
+        <input type="hidden" name="participants_count" value="1">
+
+        <div class="form-group">
+            <label for="place">Ваше место:</label>
+            <select id="place" name="place">
+                <option value="" selected>🎯 Участие (1 балл)</option>
+                <option value="4">4 место (2 балла)</option>
+                <option value="3">🥉 3 место (3 балла)</option>
+                <option value="2">🥈 2 место (4 балла)</option>
+                <option value="1">🥇 1 место (5 баллов)</option>
+            </select>
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label for="news_link">Ссылка на новость или отчет:</label>
+            <input type="url" id="news_link" name="news_link" placeholder="https://...">
+        </div>
+
+        <div class="form-group">
+            <label for="description">Описание участия и достижений:</label>
+            <textarea id="description" name="description" rows="4" required placeholder="Опишите участие в мероприятии, достигнутые результаты..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="media_files">Ссылки на фото/видео материалы:</label>
+            <textarea id="media_files" name="media_files" rows="3" placeholder="Ссылки на материалы через запятую"></textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn">
+                {% if current_user.role and current_user.role in ['admin', 'teacher'] %}🎯 Зарегистрировать участие{% else %}📨 Подать заявку на участие{% endif %}
+            </button>
+            <a href="{{ url_for('events') }}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+
+{% if current_user.role and current_user.role in ['admin', 'teacher'] %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const allStudentsCheckbox = document.getElementById('all_students');
+    const studentsSelection = document.getElementById('students-selection');
+    const classSelect = document.getElementById('class_id');
+    const studentSelect = document.getElementById('student_ids');
+
+    // Обработка переключения "все ученики"
+    if (allStudentsCheckbox) {
+        allStudentsCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                if (studentsSelection) studentsSelection.style.display = 'none';
+                // Автоматически выбираем "Участие" для всех учеников
+                document.querySelectorAll('select[name^="place_"]').forEach(select => {
+                    select.value = ''; // Участие (1 балл)
+                });
+            } else {
+                if (studentsSelection) studentsSelection.style.display = 'block';
+                // Сбрасываем все выборы мест на "Не участвовал"
+                document.querySelectorAll('select[name^="place_"]').forEach(select => {
+                    select.value = 'not_participated';
+                });
+            }
+        });
+    }
+
+    // Автоматически выбираем места для выбранных учеников
+    if (studentSelect) {
+        studentSelect.addEventListener('change', function() {
+            const selectedOptions = Array.from(this.selectedOptions).map(opt => opt.value);
+
+            // Сначала сбрасываем все выборы мест на "Не участвовал"
+            document.querySelectorAll('select[name^="place_"]').forEach(select => {
+                select.value = 'not_participated';
+            });
+
+            // Для выбранных учеников устанавливаем "Участие"
+            selectedOptions.forEach(studentId => {
+                const placeSelect = document.getElementById('place_' + studentId);
+                if (placeSelect) {
+                    placeSelect.value = ''; // Участие (1 балл)
+                }
+            });
+        });
+    }
+
+    // Обработка выбора класса для админа
+    if (classSelect) {
+        classSelect.addEventListener('change', function() {
+            if (this.value) {
+                const participantsCount = document.getElementById('participants_count');
+                participantsCount.value = 25; // Примерное значение
+            }
+        });
+    }
+});
+</script>
+{% endif %}
+
+<style>
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: auto;
+}
+
+.places-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 10px;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 10px;
+    border: 1px solid var(--gray-light);
+    border-radius: var(--border-radius-sm);
+}
+
+.place-selection {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 10px;
+    background: var(--light);
+    border-radius: var(--border-radius-sm);
+}
+
+.place-selection label {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.place-selection select {
+    width: 100%;
+}
+</style>
+{% endblock %}

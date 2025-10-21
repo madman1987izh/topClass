@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="students-page">
+    <h2>Ученики класса {{ school_class.grade }}{{ school_class.name }}</h2>
+    
+    <div class="class-info">
+        <p><strong>Классный руководитель:</strong> 
+            {% if school_class.class_teacher %}
+                {{ school_class.class_teacher.username }}
+            {% else %}
+                <span class="text-muted">Не назначен</span>
+            {% endif %}
+        </p>
+        <p><strong>Общий рейтинг класса:</strong> {{ school_class.total_rating }}</p>
+    </div>
+
+    <div class="students-list">
+        <h3>Список учеников</h3>
+        {% if school_class.students %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ФИО</th>
+                    <th>Логин</th>
+                    <th>Личный рейтинг</th>
+                    <th>Дата регистрации</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in school_class.students %}
+                <tr>
+                    <td>{{ student.full_name }}</td>
+                    <td>{{ student.login }}</td>
+                    <td>{{ student.personal_rating }}</td>
+                    <td>{{ student.created_at.strftime('%d.%m.%Y') }}</td>
+                    <td>
+                        <a href="{{ url_for('student_portfolio', student_id=student.id) }}" class="btn-small">
+                            Портфолио
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>В этом классе пока нет учеников.</p>
+        {% endif %}
+    </div>
+
+<div class="actions">
+    <a href="{{ url_for('add_class_points', class_id=school_class.id) }}" class="btn btn-success">🎯 Начислить баллы</a>
+    <a href="{{ url_for('class_points_history', class_id=school_class.id) }}" class="btn">📊 История баллов</a>
+    <a href="{{ url_for('export_student_logins', class_id=school_class.id) }}" class="btn">📤 Экспорт логинов</a>
+    <a href="{{ url_for('classes') }}" class="btn btn-secondary">← Назад к классам</a>
+</div>
+</div>
+{% endblock %}

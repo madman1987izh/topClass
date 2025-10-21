@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="classes-page">
+    <h2>📊 История начисления баллов</h2>
+    
+    <div class="class-info">
+        <h3>Класс: {{ school_class.grade }}{{ school_class.name }}</h3>
+        <p>Текущий рейтинг: <strong>{{ school_class.total_rating }} баллов</strong></p>
+    </div>
+
+    <div class="actions">
+        <a href="{{ url_for('add_class_points', class_id=school_class.id) }}" class="btn btn-success">🎯 Начислить баллы</a>
+        <a href="{{ url_for('class_students', class_id=school_class.id) }}" class="btn btn-secondary">← Назад к классу</a>
+    </div>
+
+    <div class="points-history">
+        <h3>История начислений</h3>
+        {% if points_history %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Дата</th>
+                    <th>Баллы</th>
+                    <th>Причина</th>
+                    <th>Кем начислено</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for points in points_history %}
+                <tr>
+                    <td>{{ points.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                    <td><strong>+{{ points.points }}</strong></td>
+                    <td>{{ points.reason }}</td>
+                    <td>{{ points.teacher.username }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="card">
+            <p style="text-align: center; color: var(--gray);">Баллы еще не начислялись</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

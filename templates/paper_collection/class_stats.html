@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="stats-page">
+    <div class="page-header">
+        <h2>📊 Статистика сбора макулатуры - {{ school_class.grade }}{{ school_class.name }}</h2>
+        <div class="header-actions">
+            <a href="{{ url_for('paper_collection_class', class_id=school_class.id) }}" class="btn btn-secondary">← Назад к вводу</a>
+            <a href="{{ url_for('paper_collection') }}" class="btn">📦 Все классы</a>
+        </div>
+    </div>
+
+    <div class="overview-stats card">
+        <h3>Общая статистика за {{ current_year }} год</h3>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">{{ total_year }} кг</div>
+                <div class="stat-label">Всего сдано</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ collection_days }}</div>
+                <div class="stat-label">Дней сдачи</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ avg_per_day }} кг</div>
+                <div class="stat-label">В среднем за день</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <div class="card">
+            <h3>📈 Сбор по месяцам</h3>
+            {% if monthly_stats %}
+            <div class="monthly-stats">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Месяц</th>
+                            <th>Количество (кг)</th>
+                            <th>Прогресс</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in monthly_stats %}
+                        <tr>
+                            <td>
+                                {% set month_num = stat.month.split('-')[1] %}
+                                {% if month_num == '01' %}Январь
+                                {% elif month_num == '02' %}Февраль
+                                {% elif month_num == '03' %}Март
+                                {% elif month_num == '04' %}Апрель
+                                {% elif month_num == '05' %}Май
+                                {% elif month_num == '06' %}Июнь
+                                {% elif month_num == '07' %}Июль
+                                {% elif month_num == '08' %}Август
+                                {% elif month_num == '09' %}Сентябрь
+                                {% elif month_num == '10' %}Октябрь
+                                {% elif month_num == '11' %}Ноябрь
+                                {% elif month_num == '12' %}Декабрь
+                                {% endif %} {{ stat.month.split('-')[0] }}
+                            </td>
+                            <td><strong>{{ stat.total_kg|round(2) }} кг</strong></td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: {{ (stat.total_kg / (total_year / 12)) * 100 if total_year > 0 else 0 }}%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="no-data">Нет данных за этот год</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="top-students card">
+        <h3>🏆 Топ учеников</h3>
+        {% if top_students %}
+        <div class="students-list">
+            {% for student, total_kg in top_students %}
+            <div class="student-item">
+                <div class="student-info">
+                    <span class="student-name">{{ student.full_name }}</span>
+                    <span class="student-kg">{{ total_kg|round(2) }} кг</span>
+                </div>
+                <div class="student-rank">
+                    {% if loop.index == 1 %}🥇
+                    {% elif loop.index == 2 %}🥈
+                    {% elif loop.index == 3 %}🥉
+                    {% else %}#{{ loop.index }}
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="no-data">Нет данных об учениках</p>
+        {% endif %}
+    </div>
+
+    <div class="actions">
+        <a href="{{ url_for('paper_collection_class', class_id=school_class.id) }}" class="btn btn-success">
+            📝 Внести новые данные
+        </a>
+    </div>
+</div>
+
+<style>
+.stats-page {
+    max-width: 800px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.overview-stats {
+    margin-bottom: 30px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 20px;
+    background: var(--light);
+    border-radius: var(--border-radius-sm);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--success);
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    color: var(--gray);
+    font-weight: 500;
+}
+
+.charts-section {
+    margin-bottom: 30px;
+}
+
+.monthly-stats {
+    margin-top: 15px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--gray-light);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--success);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.top-students {
+    margin-bottom: 30px;
+}
+
+.students-list {
+    margin-top: 15px;
+}
+
+.student-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    margin-bottom: 8px;
+    background: var(--light);
+    border-radius: var(--border-radius-sm);
+    border-left: 3px solid var(--success);
+}
+
+.student-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-grow: 1;
+    margin-right: 15px;
+}
+
+.student-name {
+    font-weight: 500;
+}
+
+.student-kg {
+    font-weight: 700;
+    color: var(--success);
+}
+
+.student-rank {
+    font-weight: 700;
+    color: var(--primary);
+    min-width: 30px;
+    text-align: center;
+}
+
+.no-data {
+    text-align: center;
+    color: var(--gray);
+    padding: 20px;
+    font-style: italic;
+}
+
+.actions {
+    text-align: center;
+    margin-top: 30px;
+}
+</style>
+{% endblock %}

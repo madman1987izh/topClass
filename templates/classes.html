@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="classes-page">
+    <h2>Управление классами</h2>
+    
+    {% if current_user.role == 'admin' %}
+    <div class="add-class-form">
+        <h3>Добавить класс</h3>
+        <form method="POST" action="{{ url_for('add_class') }}">
+            <input type="text" name="name" placeholder="Название класса" required>
+            <input type="text" name="grade" placeholder="Класс (например, 5А)" required>
+            <button type="submit" class="btn">Добавить класс</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <div class="classes-list">
+        <h3>Список классов</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Класс</th>
+                    <th>Классный руководитель</th>
+                    <th>Рейтинг</th>
+                    {% if current_user.role == 'admin' %}
+                    <th>Действия</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for class in classes %}
+                <tr>
+                    <td>{{ class.grade }} - {{ class.name }}</td>
+                    <td>
+                        {% if class.class_teacher %}
+                            {{ class.class_teacher.username }}
+                        {% else %}
+                            Не назначен
+                        {% endif %}
+                    </td>
+                    <td>{{ class.total_rating }}</td>
+                    {% if current_user.role == 'admin' %}
+                    <td>
+                        <form method="POST" action="{{ url_for('assign_teacher', class_id=class.id) }}" class="inline-form">
+                            <select name="teacher_id" required>
+                                <option value="">Выберите учителя</option>
+                                {% for teacher in teachers %}
+                                <option value="{{ teacher.id }}" {% if class.class_teacher_id == teacher.id %}selected{% endif %}>
+                                    {{ teacher.username }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn-small">Назначить</button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

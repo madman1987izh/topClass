@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="portfolio-page">
+    <h2>Портфолио ученика</h2>
+    
+    <div class="student-header">
+        <h3>{{ student.full_name }}</h3>
+        <p><strong>Класс:</strong> {{ student.school_class.grade }}{{ student.school_class.name }}</p>
+        <p><strong>Личный рейтинг:</strong> {{ student.personal_rating }} баллов</p>
+    </div>
+
+    <div class="portfolio-stats">
+        <h4>Статистика</h4>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h5>Всего мероприятий</h5>
+                <p class="stat-number">{{ statistics.total_events }}</p>
+            </div>
+            <div class="stat-card">
+                <h5>Всего баллов</h5>
+                <p class="stat-number">{{ statistics.total_points }}</p>
+            </div>
+            <div class="stat-card">
+                <h5>Записи в портфолио</h5>
+                <p class="stat-number">{{ statistics.portfolio_entries }}</p>
+            </div>
+        </div>
+        
+        <div class="level-stats">
+            <h5>Участие по уровням:</h5>
+            <ul>
+                <li>Школьные: {{ statistics.level_stats.school.count }} мероприятий ({{ statistics.level_stats.school.points }} баллов)</li>
+                <li>Городские: {{ statistics.level_stats.city.count }} мероприятий ({{ statistics.level_stats.city.points }} баллов)</li>
+                <li>Республиканские: {{ statistics.level_stats.republic.count }} мероприятий ({{ statistics.level_stats.republic.points }} баллов)</li>
+                <li>Российские: {{ statistics.level_stats.russian.count }} мероприятий ({{ statistics.level_stats.russian.points }} баллов)</li>
+            </ul>
+        </div>
+    </div>
+
+    {% if not hasattr(current_user, 'role') and current_user.id == student.id %}
+    <div class="add-portfolio-form">
+        <h4>Добавить запись в портфолио</h4>
+        <form method="POST" action="{{ url_for('add_portfolio_entry') }}" class="auth-form">
+            <div class="form-group">
+                <label for="title">Название достижения:</label>
+                <input type="text" id="title" name="title" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Описание:</label>
+                <textarea id="description" name="description" rows="3" required></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="entry_type">Тип достижения:</label>
+                <select id="entry_type" name="entry_type" required>
+                    <option value="achievement">Достижение</option>
+                    <option value="project">Проект</option>
+                    <option value="competition">Конкурс</option>
+                    <option value="olympiad">Олимпиада</option>
+                    <option value="sport">Спорт</option>
+                    <option value="art">Творчество</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="date_achieved">Дата достижения:</label>
+                <input type="date" id="date_achieved" name="date_achieved" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="points_earned">Баллы:</label>
+                <input type="number" id="points_earned" name="points_earned" min="0" value="0">
+            </div>
+            
+            <div class="form-group">
+                <label for="evidence_link">Ссылка на подтверждение:</label>
+                <input type="url" id="evidence_link" name="evidence_link" placeholder="https://...">
+            </div>
+            
+            <button type="submit" class="btn">Добавить в портфолио</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <div class="portfolio-sections">
+        <div class="participations-section">
+            <h4>Участие в мероприятиях</h4>
+            {% if participations %}
+            <div class="participations-list">
+                {% for participation in participations %}
+                <div class="participation-card">
+                    <h5>{{ participation.event.name }}</h5>
+                    <p><strong>Уровень:</strong> {{ participation.event.get_level_display() }}</p>
+                    <p><strong>Баллы:</strong> {{ participation.event.points }}</p>
+                    <p><strong>Дата участия:</strong> {{ participation.created_at.strftime('%d.%m.%Y') }}</p>
+                    {% if participation.description %}
+                    <p><strong>Описание:</strong> {{ participation.description }}</p>
+                    {% endif %}
+                    {% if participation.news_link %}
+                    <p><strong>Ссылка:</strong> <a href="{{ participation.news_link }}" target="_blank">{{ participation.news_link }}</a></p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>Нет подтвержденных участий в мероприятиях.</p>
+            {% endif %}
+        </div>
+
+        <div class="entries-section">
+            <h4>Достижения в портфолио</h4>
+            {% if portfolio_entries %}
+            <div class="entries-list">
+                {% for entry in portfolio_entries %}
+                <div class="entry-card">
+                    <h5>{{ entry.title }}</h5>
+                    <p><strong>Тип:</strong> {{ entry.get_type_display() }}</p>
+                    <p><strong>Дата:</strong> {{ entry.date_achieved.strftime('%d.%m.%Y') }}</p>
+                    <p><strong>Баллы:</strong> {{ entry.points_earned }}</p>
+                    <p><strong>Описание:</strong> {{ entry.description }}</p>
+                    {% if entry.evidence_link %}
+                    <p><strong>Подтверждение:</strong> <a href="{{ entry.evidence_link }}" target="_blank">{{ entry.evidence_link }}</a></p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>Нет записей в портфолио.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

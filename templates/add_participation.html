@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-form">
+    <h2>Регистрация участия</h2>
+    <h3>Мероприятие: {{ event.name }}</h3>
+    
+    <form method="POST">
+        <div class="form-group">
+            <label for="student_ids">Участники:</label>
+            <select id="student_ids" name="student_ids" multiple required style="height: 150px;">
+                {% for student in students %}
+                <option value="{{ student.id }}">{{ student.full_name }} ({{ student.school_class.grade }}{{ student.school_class.name }})</option>
+                {% endfor %}
+            </select>
+            <small>Для выбора нескольких участников удерживайте Ctrl</small>
+        </div>
+        
+        <div class="form-group">
+            <label for="news_link">Ссылка на новость:</label>
+            <input type="url" id="news_link" name="news_link" placeholder="https://...">
+        </div>
+        
+        <div class="form-group">
+            <label for="participants_count">Количество участников:</label>
+            <input type="number" id="participants_count" name="participants_count" value="1" min="1" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="media_files">Фото/видео материалы (ссылки):</label>
+            <textarea id="media_files" name="media_files" placeholder="Ссылки на материалы через запятую"></textarea>
+        </div>
+        
+        <button type="submit" class="btn">Зарегистрировать участие</button>
+        <a href="{{ url_for('events') }}" class="btn" style="background: #6c757d;">Отмена</a>
+    </form>
+</div>
+{% endblock %}

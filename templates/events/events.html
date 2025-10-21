@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="events-page">
+    <h2>Мероприятия</h2>
+    
+    {% if current_user.role and current_user.role in ['admin', 'teacher'] %}
+    <div class="actions">
+        <a href="{{ url_for('add_event') }}" class="btn">Добавить мероприятие</a>
+    </div>
+    {% endif %}
+
+    <div class="events-list">
+        <h3>Активные мероприятия</h3>
+        {% if events %}
+        <div class="events-grid">
+            {% for event in events %}
+            <div class="card event-card">
+                <h4>{{ event.name }}</h4>
+                <div class="event-details">
+                    <p><strong>Уровень:</strong> {{ event.get_level_display() }}</p>
+                    <p><strong>Тип рейтинга:</strong> {{ event.get_type_display() }}</p>
+                    <p><strong>Баллы для класса:</strong> {{ event.class_points }}</p>
+                    <p><strong>Описание:</strong> {{ event.description or 'Нет описания' }}</p>
+                    <p><strong>Создано:</strong> {{ event.created_at.strftime('%d.%m.%Y') }}</p>
+                </div>
+                <div class="event-actions">
+                    <a href="{{ url_for('participate_in_event', event_id=event.id) }}" class="btn-small">
+                        Участвовать
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p>Нет активных мероприятий.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

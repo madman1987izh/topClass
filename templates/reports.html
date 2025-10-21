@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="reports-page">
+    <h2>Отчеты</h2>
+    
+    <div class="reports-section">
+        <h3>Отчеты по классам</h3>
+        <div class="classes-list">
+            {% for class in classes %}
+            <div class="report-item">
+                <h4>{{ class.grade }} - {{ class.name }}</h4>
+                <p><strong>Общий рейтинг:</strong> {{ class.total_rating }}</p>
+                <p><strong>Классный руководитель:</strong> 
+                    {% if class.class_teacher %}
+                        {{ class.class_teacher.username }}
+                    {% else %}
+                        Не назначен
+                    {% endif %}
+                </p>
+                <button onclick="loadClassReport({{ class.id }})" class="btn-small">Подробный отчет</button>
+                <div id="report-{{ class.id }}" class="detailed-report" style="display: none; margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;"></div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="reports-section">
+        <h3>Статистика мероприятий</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Мероприятие</th>
+                    <th>Уровень</th>
+                    <th>Тип</th>
+                    <th>Баллы</th>
+                    <th>Дата</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in events %}
+                <tr>
+                    <td>{{ event.name }}</td>
+                    <td>
+                        {% if event.level == 'school' %}Школьный
+                        {% elif event.level == 'city' %}Городской
+                        {% elif event.level == 'republic' %}Республиканский
+                        {% elif event.level == 'russian' %}Российский
+                        {% else %}{{ event.level }}{% endif %}
+                    </td>
+                    <td>
+                        {% if event.event_type == 'class' %}Рейтинг класса
+                        {% elif event.event_type == 'student' %}Личный рейтинг
+                        {% else %}{{ event.event_type }}{% endif %}
+                    </td>
+                    <td>{{ event.points }}</td>
+                    <td>{{ event.created_at.strftime('%d.%m.%Y') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function loadClassReport(classId) {
+    const reportDiv = document.getElementById('report-' + classId);
+    
+    if (reportDiv.style.display === 'none') {
+        fetch('/api/class_report/' + classId)
+            .then(response => response.json())
+            .then(data => {
+                let html = '<h5>Подробный отчет:</h5>';
+                html += '<p><strong>Общий рейтинг класса: ' + data.total_rating + '</strong></p>';
+                html += '<h6>Учащиеся:</h6>';
+                html += '<ul>';
+                data.students.forEach(student => {
+                    html += '<li>' + student.name + ' - ' + student.personal_rating + ' баллов';
+                    if (student.participations.length > 0) {
+                        html += '<ul>';
+                        student.participations.forEach(participation => {
+                            html += '<li>' + participation.event_name + ' (' + participation.points + ' баллов) - ' + participation.date + '</li>';
+                        });
+                        html += '</ul>';
+                    }
+                    html += '</li>';
+                });
+                html += '</ul>';
+                reportDiv.innerHTML = html;
+                reportDiv.style.display = 'block';
+            })
+            .catch(error => {
+                reportDiv.innerHTML = '<p>Ошибка загрузки отчета</p>';
+                reportDiv.style.display = 'block';
+            });
+    } else {
+        reportDiv.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

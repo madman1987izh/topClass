@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="class-collection-page">
+    <div class="page-header">
+        <h2>📦 Сбор макулатуры - {{ school_class.grade }}{{ school_class.name }}</h2>
+        <div class="header-actions">
+            <a href="{{ url_for('paper_collection') }}" class="btn btn-secondary">← Назад</a>
+            <a href="{{ url_for('paper_collection_stats', class_id=school_class.id) }}" class="btn">📊 Статистика</a>
+        </div>
+    </div>
+
+    <div class="collection-info card">
+        <div class="info-stats">
+            <div class="info-item">
+                <span class="info-label">Сдано сегодня:</span>
+                <span class="info-value">{{ total_today }} кг</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Сдано за год:</span>
+                <span class="info-value">{{ total_year }} кг</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="collection-controls card">
+        <form id="collectionForm" method="POST" action="{{ url_for('save_paper_collection') }}">
+            <input type="hidden" name="class_id" value="{{ school_class.id }}">
+            
+            <div class="form-group">
+                <label for="collection_date">Дата сдачи:</label>
+                <input type="date" id="collection_date" name="collection_date" 
+                       value="{{ selected_date.strftime('%Y-%m-%d') }}" required>
+            </div>
+
+            <div class="form-group">
+                <label>Выбор даты из истории:</label>
+                <div class="date-buttons">
+                    {% for date in collection_dates %}
+                    <button type="button" class="btn-small {% if date == selected_date %}btn-primary{% else %}btn-secondary{% endif %}" 
+                            onclick="loadCollectionDate('{{ date.strftime('%Y-%m-%d') }}')">
+                        {{ date.strftime('%d.%m.%Y') }}
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="collection-table card">
+        <h3>Ученики класса</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ФИО ученика</th>
+                    <th>Количество (кг)</th>
+                    <th>Всего за год (кг)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in table_data %}
+                <tr>
+                    <td>{{ item.student.full_name }}</td>
+                    <td>
+                        <input type="number" 
+                               name="kilograms_{{ item.student.id }}" 
+                               value="{{ item.kilograms if item.kilograms > 0 else '' }}" 
+                               step="0.1" 
+                               min="0" 
+                               placeholder="0.0"
+                               class="kg-input"
+                               onchange="markRowChanged(this)">
+                    </td>
+                    <td class="year-total">
+                        {{ student_stats_dict.get(item.student.id, 0)|round(2) }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td><strong>Итого:</strong></td>
+                    <td id="daily-total"><strong>{{ total_today }} кг</strong></td>
+                    <td id="year-total"><strong>{{ total_year }} кг</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <div class="form-actions">
+        <button type="button" onclick="saveCollection()" class="btn btn-success">💾 Сохранить данные</button>
+        <div id="saveStatus" class="save-status"></div>
+    </div>
+</div>
+
+<script>
+let changedRows = new Set();
+
+function markRowChanged(input) {
+    const row = input.closest('tr');
+    row.style.backgroundColor = '#fff9c4';
+    changedRows.add(row);
+    
+    // Пересчет итогов
+    calculateTotals();
+}
+
+function calculateTotals() {
+    let dailyTotal = 0;
+    const inputs = document.querySelectorAll('.kg-input');
+    
+    inputs.forEach(input => {
+        const value = parseFloat(input.value) || 0;
+        dailyTotal += value;
+    });
+    
+    document.getElementById('daily-total').innerHTML = `<strong>${dailyTotal.toFixed(2)} кг</strong>`;
+}
+
+function loadCollectionDate(date) {
+    window.location.href = `{{ url_for('paper_collection_class', class_id=school_class.id) }}?date=${date}`;
+}
+
+function saveCollection() {
+    const form = document.getElementById('collectionForm');
+    const formData = new FormData(form);
+    
+    // Добавляем данные из input'ов
+    const inputs = document.querySelectorAll('.kg-input');
+    inputs.forEach(input => {
+        formData.append(input.name, input.value);
+    });
+    
+    const saveBtn = document.querySelector('.form-actions button');
+    const statusDiv = document.getElementById('saveStatus');
+    
+    saveBtn.disabled = true;
+    saveBtn.textContent = '⏳ Сохранение...';
+    statusDiv.innerHTML = '<div class="flash-message">Сохранение данных...</div>';
+    
+    fetch('{{ url_for("save_paper_collection") }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            statusDiv.innerHTML = '<div class="flash-message success">✅ Данные успешно сохранены!</div>';
+            changedRows.forEach(row => {
+                row.style.backgroundColor = '';
+            });
+            changedRows.clear();
+            
+            // Обновляем страницу через 2 секунды
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+        } else {
+            statusDiv.innerHTML = `<div class="flash-message error">❌ ${data.message}</div>`;
+        }
+    })
+    .catch(error => {
+        statusDiv.innerHTML = '<div class="flash-message error">❌ Ошибка при сохранении</div>';
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Сохранить данные';
+    });
+}
+
+// Инициализация при загрузке
+document.addEventListener('DOMContentLoaded', function() {
+    calculateTotals();
+    
+    // Автосохранение при изменении даты
+    document.getElementById('collection_date').addEventListener('change', function() {
+        if (changedRows.size > 0) {
+            if (confirm('У вас есть несохраненные изменения. Сохранить перед сменой даты?')) {
+                saveCollection();
+            }
+        }
+    });
+});
+</script>
+
+<style>
+.class-collection-page {
+    max-width: 1000px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.collection-info {
+    margin-bottom: 20px;
+}
+
+.info-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: var(--light);
+    border-radius: var(--border-radius-sm);
+}
+
+.info-label {
+    font-weight: 500;
+    color: var(--gray);
+}
+
+.info-value {
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--success);
+}
+
+.collection-controls {
+    margin-bottom: 20px;
+}
+
+.date-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.collection-table {
+    margin-bottom: 20px;
+    overflow-x: auto;
+}
+
+.kg-input {
+    width: 100px;
+    padding: 8px;
+    border: 2px solid var(--gray-light);
+    border-radius: var(--border-radius-sm);
+    text-align: center;
+    font-weight: 500;
+}
+
+.kg-input:focus {
+    border-color: var(--primary);
+    outline: none;
+}
+
+.year-total {
+    font-weight: 500;
+    color: var(--success);
+}
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.save-status {
+    min-height: 40px;
+}
+
+.flash-message.success {
+    background: var(--success);
+    color: white;
+}
+
+.flash-message.error {
+    background: var(--danger);
+    color: white;
+}
+</style>
+{% endblock %}
